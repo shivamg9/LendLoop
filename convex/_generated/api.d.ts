@@ -9,7 +9,9 @@
  */
 
 import type * as automation from "../automation.js";
+import type * as automationHttp from "../automationHttp.js";
 import type * as automationInternal from "../automationInternal.js";
+import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_dates from "../lib/dates.js";
@@ -19,6 +21,7 @@ import type * as lib_loanRules from "../lib/loanRules.js";
 import type * as lib_loanStore from "../lib/loanStore.js";
 import type * as lib_outbox from "../lib/outbox.js";
 import type * as lib_retry from "../lib/retry.js";
+import type * as lib_signedHttp from "../lib/signedHttp.js";
 import type * as lib_toolInput from "../lib/toolInput.js";
 import type * as lib_toolRemoval from "../lib/toolRemoval.js";
 import type * as lib_validators from "../lib/validators.js";
@@ -34,7 +37,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   automation: typeof automation;
+  automationHttp: typeof automationHttp;
   automationInternal: typeof automationInternal;
+  http: typeof http;
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
   "lib/dates": typeof lib_dates;
@@ -44,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   "lib/loanStore": typeof lib_loanStore;
   "lib/outbox": typeof lib_outbox;
   "lib/retry": typeof lib_retry;
+  "lib/signedHttp": typeof lib_signedHttp;
   "lib/toolInput": typeof lib_toolInput;
   "lib/toolRemoval": typeof lib_toolRemoval;
   "lib/validators": typeof lib_validators;
