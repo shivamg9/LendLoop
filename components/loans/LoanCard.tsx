@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { TrustedBadge } from "@/components/ui/Badge";
 import type { api } from "@/convex/_generated/api";
 import { formatDate } from "@/lib/format";
+import { ActivityLine } from "./ActivityLine";
 import { LoanStatusBadge } from "./LoanStatusBadge";
 
 export type LoanView = FunctionReturnType<typeof api.loans.myRequests>[number];
@@ -26,6 +27,7 @@ export function LoanCard({ loan, counterpartLabel, showTrust, actions }: Props) 
         {showTrust && loan.counterpart.trustedLender && <TrustedBadge />}
       </div>
       {actions && <div className="mt-3">{actions}</div>}
+      <ActivityLine activity={loan.activity} />
     </li>
   );
 }

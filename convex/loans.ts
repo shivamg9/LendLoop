@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { mutation, query, type QueryCtx } from "./_generated/server";
+import { loanActivity } from "./lib/activity";
 import { requireLoanParty, requireUser } from "./lib/auth";
 import { todayIso } from "./lib/dates";
 import { fail } from "./lib/errors";
@@ -97,6 +98,7 @@ async function toLoanView(ctx: QueryCtx, loan: Doc<"loans">, counterpartId: Doc<
     status: loan.status,
     overdue: isOverdue(loan, today),
     counterpart: { name: counterpart?.name ?? "Unknown", trustedLender: counterpart?.trustedLender ?? false },
+    activity: await loanActivity(ctx, loan._id),
   };
 }
 
