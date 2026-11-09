@@ -26,6 +26,7 @@ import type * as lib_toolInput from "../lib/toolInput.js";
 import type * as lib_toolRemoval from "../lib/toolRemoval.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as loans from "../loans.js";
+import type * as seed from "../seed.js";
 import type * as tools from "../tools.js";
 import type * as users from "../users.js";
 
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   "lib/toolRemoval": typeof lib_toolRemoval;
   "lib/validators": typeof lib_validators;
   loans: typeof loans;
+  seed: typeof seed;
   tools: typeof tools;
   users: typeof users;
 }>;
