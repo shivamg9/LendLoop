@@ -10,8 +10,12 @@
 
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
+import type * as lib_dates from "../lib/dates.js";
 import type * as lib_errors from "../lib/errors.js";
+import type * as lib_toolInput from "../lib/toolInput.js";
+import type * as lib_toolRemoval from "../lib/toolRemoval.js";
 import type * as lib_validators from "../lib/validators.js";
+import type * as tools from "../tools.js";
 import type * as users from "../users.js";
 
 import type {
@@ -23,8 +27,12 @@ import type {
 declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
+  "lib/dates": typeof lib_dates;
   "lib/errors": typeof lib_errors;
+  "lib/toolInput": typeof lib_toolInput;
+  "lib/toolRemoval": typeof lib_toolRemoval;
   "lib/validators": typeof lib_validators;
+  tools: typeof tools;
   users: typeof users;
 }>;
 
