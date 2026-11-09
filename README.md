@@ -22,13 +22,7 @@ LendLoop is a neighbourhood tool-lending app. Anyone can browse what's available
 
 ## Screenshots
 
-| | |
-|---|---|
-| Public landing (name + category only) | ![Public landing](docs/screenshots/public.png) |
-| Tool catalogue with availability, filter and Trusted Lender badge | ![Catalogue](docs/screenshots/tools.png) |
-| Incoming requests with automation activity | ![Incoming](docs/screenshots/incoming.png) |
-| Admin: automation health | ![Admin](docs/screenshots/admin.png) |
-| n8n: signed notification workflow | ![n8n](docs/screenshots/n8n-notification.png) |
+Screenshots live in [`docs/screenshots/`](docs/screenshots/). Suggested captures: the public landing page (name + category only), the tool catalogue with availability and the Trusted Lender badge, incoming requests with automation activity, the Admin → Automation tab, and the n8n notification workflow.
 
 ---
 
@@ -47,6 +41,7 @@ npm install
 
 1. Create a Clerk application (Email sign-in is enough).
 2. **Configure → JWT templates → New template → Convex**. Keep the name **`convex`** (Convex validates `aud: "convex"`). Copy the **Issuer** URL.
+   The template's claims must include `"aud": "convex"` plus `email`, `name` and `email_verified`. The Convex preset adds these; a blank template does not, and Convex then rejects the token with *"No auth provider found matching the given token"*.
 3. **API Keys**: copy the publishable and secret keys into `.env.local` (see `.env.example`):
 
 ```bash
