@@ -2,6 +2,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import type { LoanStatus } from "./constants";
 import { fail } from "./errors";
+import { enqueueLoanEvent } from "./outbox";
 import { canTransition, rangesOverlap, type DateRange } from "./loanRules";
 
 export async function loansForTool(ctx: QueryCtx, toolId: Id<"tools">, status: LoanStatus) {
@@ -20,7 +21,10 @@ export async function findApprovedOverlap(
   return approved.find((l) => rangesOverlap(l, range));
 }
 
-/** Single choke point for status changes so illegal transitions are impossible. */
+/**
+ * Single choke point for status changes: illegal transitions are impossible
+ * and every change emits exactly one outbox event.
+ */
 export async function transition(ctx: MutationCtx, loan: Doc<"loans">, to: LoanStatus): Promise<Doc<"loans">> {
   if (!canTransition(loan.status, to)) {
     fail("CONFLICT", `Cannot change a ${loan.status} request to ${to}.`);
@@ -28,5 +32,7 @@ export async function transition(ctx: MutationCtx, loan: Doc<"loans">, to: LoanS
   const now = Date.now();
   const patch = to === "returned" ? { status: to, returnedAt: now } : { status: to, decidedAt: now };
   await ctx.db.patch(loan._id, patch);
-  return { ...loan, ...patch };
+  const updated = { ...loan, ...patch };
+  await enqueueLoanEvent(ctx, updated);
+  return updated;
 }

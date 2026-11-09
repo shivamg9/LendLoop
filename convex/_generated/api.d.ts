@@ -8,12 +8,17 @@
  * @module
  */
 
+import type * as automation from "../automation.js";
+import type * as automationInternal from "../automationInternal.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_dates from "../lib/dates.js";
 import type * as lib_errors from "../lib/errors.js";
+import type * as lib_hmac from "../lib/hmac.js";
 import type * as lib_loanRules from "../lib/loanRules.js";
 import type * as lib_loanStore from "../lib/loanStore.js";
+import type * as lib_outbox from "../lib/outbox.js";
+import type * as lib_retry from "../lib/retry.js";
 import type * as lib_toolInput from "../lib/toolInput.js";
 import type * as lib_toolRemoval from "../lib/toolRemoval.js";
 import type * as lib_validators from "../lib/validators.js";
@@ -28,12 +33,17 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  automation: typeof automation;
+  automationInternal: typeof automationInternal;
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
   "lib/dates": typeof lib_dates;
   "lib/errors": typeof lib_errors;
+  "lib/hmac": typeof lib_hmac;
   "lib/loanRules": typeof lib_loanRules;
   "lib/loanStore": typeof lib_loanStore;
+  "lib/outbox": typeof lib_outbox;
+  "lib/retry": typeof lib_retry;
   "lib/toolInput": typeof lib_toolInput;
   "lib/toolRemoval": typeof lib_toolRemoval;
   "lib/validators": typeof lib_validators;

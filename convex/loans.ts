@@ -6,6 +6,7 @@ import { todayIso } from "./lib/dates";
 import { fail } from "./lib/errors";
 import { isOverdue, rangesOverlap, validateRequestDates } from "./lib/loanRules";
 import { findApprovedOverlap, loansForTool, transition } from "./lib/loanStore";
+import { enqueueLoanEvent } from "./lib/outbox";
 import { vIsoDate } from "./lib/validators";
 
 export const request = mutation({
@@ -27,7 +28,7 @@ export const request = mutation({
       fail("CONFLICT", "You already have a pending request for these dates.");
     }
 
-    return await ctx.db.insert("loans", {
+    const loanId = await ctx.db.insert("loans", {
       toolId,
       lenderId: tool.ownerId,
       borrowerId: me._id,
@@ -35,6 +36,9 @@ export const request = mutation({
       endDate,
       status: "pending",
     });
+    const loan = await ctx.db.get(loanId);
+    if (loan) await enqueueLoanEvent(ctx, loan);
+    return loanId;
   },
 });
 

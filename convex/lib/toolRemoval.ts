@@ -1,13 +1,14 @@
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { fail } from "./errors";
+import { transition } from "./loanStore";
 
 /**
  * Shared by owner deletion and admin removal. Refuses while an approved loan
  * is outstanding (the tool is physically with someone); pending requests are
  * declined so borrowers aren't left waiting on a tool that no longer exists.
  */
-export async function removeTool(ctx: MutationCtx, tool: Doc<"tools">): Promise<Doc<"loans">[]> {
+export async function removeTool(ctx: MutationCtx, tool: Doc<"tools">): Promise<void> {
   const approved = await ctx.db
     .query("loans")
     .withIndex("by_tool_status", (q) => q.eq("toolId", tool._id).eq("status", "approved"))
@@ -18,10 +19,7 @@ export async function removeTool(ctx: MutationCtx, tool: Doc<"tools">): Promise<
     .query("loans")
     .withIndex("by_tool_status", (q) => q.eq("toolId", tool._id).eq("status", "pending"))
     .collect();
-  const now = Date.now();
-  for (const loan of pending) {
-    await ctx.db.patch(loan._id, { status: "declined", decidedAt: now });
-  }
+  // Declined before the delete so the outbox event can still read the tool name.
+  for (const loan of pending) await transition(ctx, loan, "declined");
   await ctx.db.delete(tool._id);
-  return pending;
 }

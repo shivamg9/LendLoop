@@ -43,8 +43,8 @@ export default defineSchema({
   automationEvents: defineTable({
     eventType: vEventType,
     loanId: v.id("loans"),
+    // Data-minimized: exactly what the notification needs. The outbox _id is sent as eventId.
     payload: v.object({
-      eventId: v.string(),
       eventType: vEventType,
       loanId: v.string(),
       toolName: v.string(),
