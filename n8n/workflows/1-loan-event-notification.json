@@ -1,0 +1,243 @@
+{
+  "id": "lendloopNotifyW1",
+  "name": "LendLoop - Loan event notification",
+  "active": false,
+  "nodes": [
+    {
+      "id": "eecdad43-06f3-5796-8cb7-e45a642f5b5f",
+      "name": "Loan event webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lendloop-loan-events",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "cad12b07-6e67-51f8-ac05-0a42c0185696"
+    },
+    {
+      "id": "6ac929c8-524e-551d-b6b8-ebe3fa9a54b2",
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Verifies the signature over the EXACT raw request body (Webhook \"Raw Body\" option),\n// using a constant-time comparison, and rejects timestamps outside a 5-minute window.\nconst crypto = require('crypto');\nconst MAX_SKEW_SECONDS = 300;\nconst secret = $env.LENDLOOP_WEBHOOK_SECRET;\nif (!secret) throw new Error('LENDLOOP_WEBHOOK_SECRET is not set'); // fail closed\n\nconst headers = $input.first().json.headers ?? {};\nconst timestamp = String(headers['x-lendloop-timestamp'] ?? '');\nconst signature = String(headers['x-lendloop-signature'] ?? '');\nconst rawBody = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\n\nfunction failureReason() {\n  if (!/^\\d{1,12}$/.test(timestamp) || !/^[0-9a-f]{64}$/i.test(signature)) return 'missing_or_malformed_headers';\n  if (Math.abs(Math.floor(Date.now() / 1000) - Number(timestamp)) > MAX_SKEW_SECONDS) return 'stale_timestamp';\n  const expected = crypto.createHmac('sha256', secret).update(`${timestamp}.${rawBody}`).digest();\n  return crypto.timingSafeEqual(expected, Buffer.from(signature, 'hex')) ? null : 'bad_signature';\n}\n\nconst reason = failureReason();\nreturn [{ json: { valid: reason === null, reason, event: reason === null ? JSON.parse(rawBody) : null } }];"
+      }
+    },
+    {
+      "id": "5e8c6da8-6041-5098-bc91-ea0a0ebeea75",
+      "name": "Signature valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "193d1ff9-20a8-5fda-8bc7-0321601c16bc",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "07adf141-bf91-52b7-af73-7e8c3b3dfdf6",
+      "name": "Build notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        200
+      ],
+      "parameters": {
+        "jsCode": "// Turns a data-minimized loan event into a channel-agnostic message (to/subject/text).\nconst e = $json.event;\nconst dates = `${e.startDate} to ${e.endDate}`;\nconst messages = {\n  'loan.requested': [`New request to borrow your ${e.toolName}`, `Someone would like to borrow your ${e.toolName} from ${dates}. Open LendLoop to approve or decline.`],\n  'loan.approved':  [`Your request for ${e.toolName} was approved`, `Good news: your request to borrow ${e.toolName} (${dates}) was approved.`],\n  'loan.declined':  [`Your request for ${e.toolName} was declined`, `Your request to borrow ${e.toolName} (${dates}) was declined.`],\n  'loan.cancelled': [`A request for your ${e.toolName} was cancelled`, `The request to borrow your ${e.toolName} (${dates}) was cancelled by the borrower.`],\n  'loan.returned':  [`${e.toolName} marked as returned`, `Thanks for returning ${e.toolName}. The loan is now closed.`],\n};\nconst [subject, body] = messages[e.eventType] ?? [`LendLoop update: ${e.toolName}`, `Status is now ${e.status}.`];\nreturn { json: { eventId: e.eventId, eventType: e.eventType, to: e.recipientEmail, subject, text: `Hi ${e.recipientFirstName},\\n\\n${body}\\n\\n\u2014 LendLoop` } };",
+        "mode": "runOnceForEachItem"
+      }
+    },
+    {
+      "id": "7389315a-5002-532a-b29d-9918002c4abe",
+      "name": "Send notification (mock)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        200
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3464fb43-e4bc-555d-9455-1604ca648442",
+              "name": "channel",
+              "value": "mock",
+              "type": "string"
+            },
+            {
+              "id": "6109dcb0-bd9d-5305-ae96-06bd208ba0ab",
+              "name": "to",
+              "value": "={{ $json.to }}",
+              "type": "string"
+            },
+            {
+              "id": "f5e4d7cf-b9b9-5a72-90e5-0b24309d956e",
+              "name": "subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "61931631-236c-5387-9bc0-6c495f5e8a64",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e52b749d-7dfc-5ec0-ab22-245d7ce9df4e",
+              "name": "sentAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "7607f20f-4c67-5b87-bc38-de075775dad9",
+              "name": "eventId",
+              "value": "={{ $json.eventId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2bb78106-9d5c-55e7-aeaf-7b196aef316a",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1100,
+        200
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ received: true, eventId: $json.eventId }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "15eee08e-bce1-5ddf-94b5-027d0f3ab73d",
+      "name": "Respond 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        660,
+        420
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: 'unauthorized', reason: $json.reason }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Loan event webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify signature": {
+      "main": [
+        [
+          {
+            "node": "Signature valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signature valid?": {
+      "main": [
+        [
+          {
+            "node": "Build notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build notification": {
+      "main": [
+        [
+          {
+            "node": "Send notification (mock)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send notification (mock)": {
+      "main": [
+        [
+          {
+            "node": "Respond 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "errorWorkflow": "lendloopErrorW01"
+  },
+  "pinData": {},
+  "tags": []
+}

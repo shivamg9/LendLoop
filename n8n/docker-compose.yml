@@ -1,0 +1,32 @@
+# Local n8n for LendLoop. Secrets come from n8n/.env (gitignored); see .env.example.
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.46.7
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678" # bind to loopback only; never expose the editor publicly
+    environment:
+      # Only the variables listed here reach the container (no blanket env_file).
+      LENDLOOP_WEBHOOK_SECRET: ${LENDLOOP_WEBHOOK_SECRET:?set in n8n/.env}
+      CONVEX_SITE_URL: ${CONVEX_SITE_URL:?set in n8n/.env}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?set in n8n/.env}
+      # Code nodes read the shared secret via $env and use node:crypto for HMAC.
+      # Trade-off documented in README ("n8n secrets").
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      NODE_FUNCTION_ALLOW_BUILTIN: crypto
+      GENERIC_TIMEZONE: UTC
+      TZ: UTC
+      WEBHOOK_URL: http://localhost:5678/
+      N8N_SECURE_COOKIE: "false" # local http only
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: "168"
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # reach the local Convex backend on the host
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/workflows:ro
+
+volumes:
+  n8n_data:
