@@ -1,11 +1,9 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
-// Optimistic redirect only; real authorization is enforced inside Convex functions.
-const isProtectedRoute = createRouteMatcher(["/tools(.*)", "/my(.*)", "/admin(.*)"]);
-
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) await auth.protect();
-});
+// Only establishes the Clerk session. Following Clerk's resource-based guidance,
+// there is no path matching here: every Convex function enforces auth itself,
+// and protected pages render a sign-in prompt via <AuthGate>.
+export default clerkMiddleware();
 
 export const config = {
   matcher: [
